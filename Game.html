@@ -1,40 +1,73 @@
-<!DOCTYPE html>
+here<!DOCTYPE html>
 <html lang="hi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Symmetrical Water Loop Match</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Full Screen Water Loop Match</title>
     <style>
-        body {
+        * {
+            box-sizing: border-box;
             margin: 0;
-            background: radial-gradient(circle, #0f2027, #203a43, #2c5364);
+            padding: 0;
+        }
+        body {
+            background: radial-gradient(circle at center, #1a2a3a 0%, #0d1b2a 60%, #050a0f 100%);
             color: #fff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
             height: 100vh;
+            width: 100vw;
             overflow: hidden;
             user-select: none;
+            padding: 20px 10px;
         }
-        #ui-box { text-align: center; margin-bottom: 15px; }
-        .score-text { font-size: 26px; font-weight: bold; text-shadow: 0 0 10px #00f2fe; }
-        .level-text { font-size: 18px; color: #ff0844; margin-top: 4px; font-weight: bold; }
-        #msg { font-size: 15px; color: #e0e0e0; margin-top: 6px; }
+        #ui-box { 
+            text-align: center; 
+            z-index: 10;
+        }
+        .score-text { 
+            font-size: clamp(22px, 5vw, 32px); 
+            font-weight: 800; 
+            text-shadow: 0 0 12px rgba(0, 242, 254, 0.6); 
+            letter-spacing: 1px;
+        }
+        .level-text { 
+            font-size: clamp(16px, 3.5vw, 22px); 
+            color: #ff0844; 
+            margin-top: 4px; 
+            font-weight: 700; 
+        }
+        #msg { 
+            font-size: clamp(13px, 3vw, 16px); 
+            color: #b0c4de; 
+            margin-top: 6px; 
+        }
+        #canvas-container {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-height: 70vh;
+        }
         canvas { 
-            background: rgba(0, 0, 0, 0.5); 
+            background: rgba(10, 20, 30, 0.6); 
             border-radius: 50%; 
-            box-shadow: 0 0 35px rgba(0, 242, 254, 0.4); 
+            box-shadow: 0 0 50px rgba(0, 242, 254, 0.25), inset 0 0 20px rgba(0, 0, 0, 0.8); 
             cursor: pointer;
+            touch-action: manipulation;
         }
         #creator-tag {
-            margin-top: 18px;
-            font-size: 13px;
+            font-size: clamp(11px, 2.5vw, 14px);
             color: #00f2fe;
             letter-spacing: 2px;
-            font-weight: bold;
+            font-weight: 700;
             text-transform: uppercase;
+            z-index: 10;
+            opacity: 0.8;
         }
     </style>
 </head>
@@ -46,29 +79,43 @@
         <div id="msg">Tap anywhere to match the water color!</div>
     </div>
     
-    <canvas id="gameCanvas" width="340" height="340"></canvas>
+    <div id="canvas-container">
+        <canvas id="gameCanvas"></canvas>
+    </div>
 
     <div id="creator-tag">Created by Madan Mohan (2026)</div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        const container = document.getElementById('canvas-container');
+        
         const scoreEl = document.getElementById('score');
         const bestEl = document.getElementById('best');
         const levelEl = document.getElementById('level');
         const msgEl = document.getElementById('msg');
+
+        let size = 300;
+        function resizeCanvas() {
+            const maxW = container.clientWidth * 0.9;
+            const maxH = container.clientHeight * 0.9;
+            size = Math.min(maxW, maxH, 500); // अधिकतम 500px तक बड़ा होगा
+            canvas.width = size;
+            canvas.height = size;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
 
         const colors = ['#00f2fe', '#ff0844', '#ffb199', '#fdbb2d'];
         let ringAngle = 0;
         let currentColorIndex = 0;
         let score = 0;
         let level = 1;
-        let highScore = localStorage.getItem('mm_symm_highscore') || 0;
+        let highScore = localStorage.getItem('mm_full_highscore') || 0;
         bestEl.innerText = highScore;
 
-        let ballRadius = 0;
-        let maxBallRadius = 100; // सिमेट्री मैच पॉइंट
-        let baseSpeed = 1.0;     // धीमी व स्मूथ स्पीड
+        let ballProgress = 0;
+        let baseSpeed = 0.008; // धीमी और स्थिर गति
         let speed = baseSpeed;
         let isGameOver = false;
         let particles = [];
@@ -89,12 +136,12 @@
         }
 
         function createParticles(x, y, color) {
-            for (let i = 0; i < 15; i++) {
+            for (let i = 0; i < 20; i++) {
                 particles.push({
                     x: x, y: y,
-                    vx: (Math.random() - 0.5) * 6,
-                    vy: (Math.random() - 0.5) * 6,
-                    radius: Math.random() * 3 + 2,
+                    vx: (Math.random() - 0.5) * (size * 0.02),
+                    vy: (Math.random() - 0.5) * (size * 0.02),
+                    radius: Math.random() * (size * 0.012) + 2,
                     color: color,
                     alpha: 1
                 });
@@ -122,15 +169,16 @@
         function drawRing() {
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
-            const radius = 115;
+            const radius = size * 0.36; // स्क्रीन के हिसाब से बड़ा रिंग
             const sliceAngle = (Math.PI * 2) / 4;
+            const lineWidth = size * 0.1; // मोटी रिंग
 
             for (let i = 0; i < 4; i++) {
                 ctx.beginPath();
                 ctx.arc(centerX, centerY, radius, ringAngle + i * sliceAngle, ringAngle + (i + 1) * sliceAngle);
-                ctx.lineWidth = 32; // रिंग को बड़ा और मोटा किया गया
+                ctx.lineWidth = lineWidth;
                 ctx.strokeStyle = colors[i];
-                ctx.shadowBlur = 15;
+                ctx.shadowBlur = size * 0.04;
                 ctx.shadowColor = colors[i];
                 ctx.stroke();
             }
@@ -140,20 +188,23 @@
         function drawWaterBall() {
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
+            const maxRadius = size * 0.31; // रिंग के अंदर परफेक्ट फिट
+            const currentRadius = ballProgress * maxRadius;
 
             ctx.save();
             ctx.beginPath();
-            // बॉल का आकार सिमेट्रिकली छोटा रखा गया है
-            ctx.arc(centerX, centerY, ballRadius * 0.75, 0, Math.PI * 2);
+            ctx.arc(centerX, centerY, currentRadius, 0, Math.PI * 2);
             ctx.fillStyle = colors[currentColorIndex];
-            ctx.shadowBlur = 12;
+            ctx.shadowBlur = size * 0.03;
             ctx.shadowColor = colors[currentColorIndex];
             ctx.fill();
 
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, Math.max(0, (ballRadius * 0.75) - 6), 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-            ctx.fill();
+            if (currentRadius > 8) {
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, Math.max(0, currentRadius - size * 0.025), 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+                ctx.fill();
+            }
             ctx.restore();
         }
 
@@ -164,7 +215,7 @@
         }
 
         function resetBall() {
-            ballRadius = 0;
+            ballProgress = 0;
             currentColorIndex = Math.floor(Math.random() * 4);
         }
 
@@ -172,9 +223,9 @@
             if (isGameOver) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            ballRadius += speed;
+            ballProgress += speed;
 
-            if (ballRadius >= maxBallRadius) {
+            if (ballProgress >= 1.0) {
                 if (currentColorIndex === getBottomColorIndex()) {
                     score += 1;
                     scoreEl.innerText = score;
@@ -184,13 +235,13 @@
 
                     if (score > highScore) {
                         highScore = score;
-                        localStorage.setItem('mm_symm_highscore', highScore);
+                        localStorage.setItem('mm_full_highscore', highScore);
                         bestEl.innerText = highScore;
                     }
 
-                    speed = baseSpeed + (level - 1) * 0.12;
+                    speed = baseSpeed + (level - 1) * 0.001;
 
-                    createParticles(canvas.width / 2, canvas.height / 2 + 100, colors[currentColorIndex]);
+                    createParticles(canvas.width / 2, canvas.height / 2 + size * 0.3, colors[currentColorIndex]);
                     playSound(600, 0.08);
                     resetBall();
                 } else {
@@ -220,7 +271,7 @@
             }
         }
 
-        window.addEventListener('click', handleTap);
+        window.addEventListener('pointerdown', handleTap);
         resetBall();
         update();
     </script>

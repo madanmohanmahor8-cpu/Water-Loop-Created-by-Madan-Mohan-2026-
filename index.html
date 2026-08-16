@@ -1,11 +1,13 @@
-
+<!DOCTYPE html>
+<html lang="hi">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Full Screen Water Loop Match</title>
+    <title>Big Ring Water Loop - Madan Mohan</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            background: radial-gradient(circle at center, #1a2a3a 0%, #0d1b2a 60%, #050a0f 100%);
+            background: #09121d;
             color: #fff;
             font-family: 'Segoe UI', Roboto, sans-serif;
             display: flex;
@@ -19,18 +21,29 @@
             padding: 20px 10px;
         }
         #ui-box { text-align: center; z-index: 10; }
-        .score-text { font-size: 28px; font-weight: 800; text-shadow: 0 0 12px rgba(0, 242, 254, 0.6); }
+        .score-text { font-size: 28px; font-weight: 800; color: #00f2fe; text-shadow: 0 0 12px rgba(0, 242, 254, 0.5); }
         .level-text { font-size: 18px; color: #ff0844; margin-top: 4px; font-weight: 700; }
-        #msg { font-size: 15px; color: #b0c4de; margin-top: 6px; }
-        #canvas-container { flex-grow: 1; display: flex; align-items: center; justify-content: center; width: 100%; max-height: 70vh; }
+        #msg { font-size: 15px; color: #a0b0c0; margin-top: 6px; }
+        #canvas-container { 
+            flex-grow: 1; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            width: 100%; 
+        }
         canvas { 
-            background: rgba(10, 20, 30, 0.6); 
-            border-radius: 50%; 
-            box-shadow: 0 0 50px rgba(0, 242, 254, 0.25); 
+            background: transparent; 
             cursor: pointer;
             touch-action: manipulation;
         }
-        #creator-tag { font-size: 13px; color: #00f2fe; letter-spacing: 2px; font-weight: 700; text-transform: uppercase; z-index: 10; }
+        #creator-tag { 
+            font-size: 14px; 
+            color: #00f2fe; 
+            letter-spacing: 2px; 
+            font-weight: 700; 
+            text-transform: uppercase; 
+            z-index: 10;
+        }
     </style>
 </head>
 <body>
@@ -57,11 +70,12 @@
         const levelEl = document.getElementById('level');
         const msgEl = document.getElementById('msg');
 
-        let size = 300;
+        let size = 350;
         function resizeCanvas() {
-            const maxW = container.clientWidth * 0.9;
-            const maxH = container.clientHeight * 0.9;
-            size = Math.min(maxW, maxH, 480);
+            const maxW = container.clientWidth * 0.98;
+            const maxH = container.clientHeight * 0.98;
+            // कैनवास को स्क्रीन के हिसाब से अधिकतम बड़ा (550px तक) किया गया है
+            size = Math.min(maxW, maxH, 550); 
             canvas.width = size;
             canvas.height = size;
         }
@@ -73,11 +87,11 @@
         let currentColorIndex = 0;
         let score = 0;
         let level = 1;
-        let highScore = localStorage.getItem('mm_full_highscore') || 0;
+        let highScore = localStorage.getItem('mm_bigring_highscore') || 0;
         bestEl.innerText = highScore;
 
         let ballProgress = 0;
-        let baseSpeed = 0.008;
+        let baseSpeed = 0.0075; // धीमी व आसान स्पीड
         let speed = baseSpeed;
         let isGameOver = false;
         let particles = [];
@@ -103,7 +117,7 @@
                     x: x, y: y,
                     vx: (Math.random() - 0.5) * (size * 0.02),
                     vy: (Math.random() - 0.5) * (size * 0.02),
-                    radius: Math.random() * (size * 0.012) + 2,
+                    radius: Math.random() * (size * 0.01) + 2,
                     color: color,
                     alpha: 1
                 });
@@ -131,9 +145,9 @@
         function drawRing() {
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
-            const radius = size * 0.36;
+            const radius = size * 0.40; // बहुत बड़ा गोल घेरा
             const sliceAngle = (Math.PI * 2) / 4;
-            const lineWidth = size * 0.1;
+            const lineWidth = size * 0.12; // काफी मोटी और मजबूत दिखने वाली रिंग
 
             for (let i = 0; i < 4; i++) {
                 ctx.beginPath();
@@ -150,7 +164,8 @@
         function drawWaterBall() {
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
-            const maxRadius = size * 0.31;
+            // बॉल को छोटा रखा गया है (रिंग के मुकाबले 0.28 अनुपात)
+            const maxRadius = size * 0.28; 
             const currentRadius = ballProgress * maxRadius;
 
             ctx.save();
@@ -161,9 +176,9 @@
             ctx.shadowColor = colors[currentColorIndex];
             ctx.fill();
 
-            if (currentRadius > 8) {
+            if (currentRadius > 6) {
                 ctx.beginPath();
-                ctx.arc(centerX, centerY, Math.max(0, currentRadius - size * 0.025), 0, Math.PI * 2);
+                ctx.arc(centerX, centerY, Math.max(0, currentRadius - size * 0.02), 0, Math.PI * 2);
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
                 ctx.fill();
             }
@@ -197,13 +212,13 @@
 
                     if (score > highScore) {
                         highScore = score;
-                        localStorage.setItem('mm_full_highscore', highScore);
+                        localStorage.setItem('mm_bigring_highscore', highScore);
                         bestEl.innerText = highScore;
                     }
 
                     speed = baseSpeed + (level - 1) * 0.001;
 
-                    createParticles(canvas.width / 2, canvas.height / 2 + size * 0.3, colors[currentColorIndex]);
+                    createParticles(canvas.width / 2, canvas.height / 2 + size * 0.35, colors[currentColorIndex]);
                     playSound(600, 0.08);
                     resetBall();
                 } else {
@@ -239,3 +254,5 @@
     </script>
 </body>
 </html>
+
+                    

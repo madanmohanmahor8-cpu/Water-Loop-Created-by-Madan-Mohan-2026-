@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Water Loop Match - Deluxe Edition</title>
+    <style>
+        body {
+            margin: 0;
+            background: radial-gradient(circle, #0f2027, #203a43, #2c5364);
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+        #ui-box { text-align: center; margin-bottom: 15px; }
+        .score-text { font-size: 26px; font-weight: bold; text-shadow: 0 0 10px #00f2fe; }
+        .level-text { font-size: 18px; color: #ff0844; margin-top: 4px; font-weight: bold; }
+        #msg { font-size: 15px; color: #e0e0e0; margin-top: 6px; }
+        canvas { 
+            background: rgba(0, 0, 0, 0.5); 
+            border-radius: 50%; 
+            box-shadow: 0 0 35px rgba(0, 242, 254, 0.4); 
+            cursor: pointer;
+        }
+        #creator-tag {
+            margin-top: 18px;
+            font-size: 13px;
+            color: #00f2fe;
+            letter-spacing: 2px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ui-box">
+        <div class="score-text">Score: <span id="score">0</span> | Best: <span id="best">0</span></div>
+        <div class="level-text">Level: <span id="level">1</span></div>
+        <div id="msg">Tap anywhere to match the water color!</div>
+    </div>
+    
+    <canvas id="gameCanvas" width="340" height="340"></canvas>
+
+    <div id="creator-tag">Created by Madan Mohan (2026)</div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('score');
+        const bestEl = document.getElementById('best');
+        const levelEl = document.getElementById('level');
+        const msgEl = document.getElementById('msg');
+
+        const colors = ['#00f2fe', '#ff0844', '#ffb199', '#fdbb2d'];
+        let ringAngle = 0;
+        let currentColorIndex = 0;
+        let score = 0;
+        let level = 1;
+        let highScore = localStorage.getItem('mm_deluxe_highscore') || 0;
+        bestEl.innerText = highScore;
+
+        let ballRadius = 0;
+        let baseSpeed = 1.2; // स्लो स्पीड सेट की गई है
+        let speed = baseSpeed;
+        let isGameOver = false;
+        let particles = [];
+        let hasStar = false;
+
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(freq, duration, type = 'sine') {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function createParticles(x, y, color) {
+            for (let i = 0; i < 15; i++) {
+                particles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6,
+                    radius: Math.random() * 4 + 2,
+                    color: color,
+                    alpha: 1
+                });
+            }
+        }
+
+        function drawParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                ctx.save();
+                ctx.globalAlpha = p.alpha;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fillStyle = p.color;
+                ctx.fill();
+                ctx.restore();
+
+                p.x += p.vx;
+                p.y += p.vy;
+                p.alpha -= 0.03;
+                if (p.alpha <= 0) particles.splice(i, 1);
+            }
+        }
+
+        function drawRing() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 110;
+            const sliceAngle = (Math.PI * 2) / 4;
+
+            for (let i = 0; i < 4; i++) {
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, ringAngle + i * sliceAngle, ringAngle + (i + 1) * sliceAngle);
+                ctx.lineWidth = 22;
+                ctx.strokeStyle = colors[i];
+                ctx.shadowBlur = 12;
+                ctx.shadowColor = colors[i];
+                ctx.stroke();
+            }
+            ctx.shadowBlur = 0;
+        }
+
+        function drawWaterBall() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, ballRadius, 0, Math.PI * 2);
+            ctx.fillStyle = colors[currentColorIndex];
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = colors[currentColorIndex];
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, Math.max(0, ballRadius - 8), 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+            ctx.fill();
+
+            if (hasStar && ballRadius > 15) {
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, 8, 0, Math.PI * 2);
+                ctx.fillStyle = '#fff';
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#fff';
+                ctx.fill();
+            }
+
+            ctx.restore();
+        }
+
+        function getBottomColorIndex() {
+            let normalizedAngle = (ringAngle % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+            let activeIndex = Math.floor(((2 * Math.PI - normalizedAngle) % (Math.PI * 2)) / (Math.PI / 2));
+            return (activeIndex + 1) % 4;
+        }
+
+        function resetBall() {
+            ballRadius = 0;
+            currentColorIndex = Math.floor(Math.random() * 4);
+            hasStar = Math.random() < 0.3; // 30% चांस है कि बोनस स्टार आए
+        }
+
+        function update() {
+            if (isGameOver) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            ballRadius += speed;
+
+            if (ballRadius >= 98) {
+                if (currentColorIndex === getBottomColorIndex()) {
+                    let earned = hasStar ? 2 : 1;
+                    score += earned;
+                    scoreEl.innerText = score;
+                    
+                    level = Math.floor(score / 5) + 1;
+                    levelEl.innerText = level;
+
+                    if (score > highScore) {
+                        highScore = score;
+                        localStorage.setItem('mm_deluxe_highscore', highScore);
+                        bestEl.innerText = highScore;
+                    }
+
+                    // धीरे-धीरे स्पीड बढ़ाना
+                    speed = baseSpeed + (level - 1) * 0.15;
+
+                    createParticles(canvas.width / 2, canvas.height / 2 + 100, colors[currentColorIndex]);
+                    playSound(hasStar ? 800 : 550, 0.08);
+                    resetBall();
+                } else {
+                    isGameOver = true;
+                    playSound(180, 0.4, 'sawtooth');
+                    msgEl.innerHTML = "<b style='color:#ff0844;'>GAME OVER! Tap to try again</b>";
+                }
+            }
+
+            drawRing();
+            drawWaterBall();
+            drawParticles();
+            requestAnimationFrame(update);
+        }
+
+        function handleTap() {
+            if (isGameOver) {
+                score = 0; level = 1; speed = baseSpeed; isGameOver = false;
+                scoreEl.innerText = score;
+                levelEl.innerText = level;
+                msgEl.innerText = "Tap anywhere to match the water color!";
+                resetBall();
+                update();
+            } else {
+                ringAngle += Math.PI / 2;
+                playSound(420, 0.04);
+            }
+        }
+
+        window.addEventListener('click', handleTap);
+        resetBall();
+        update();
+    </script>
+</body>
+</html>

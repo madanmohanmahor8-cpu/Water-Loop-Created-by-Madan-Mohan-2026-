@@ -1,10 +1,35 @@
-<!DOCTYPE html>
+
 <html lang="hi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Symmetrical Water Loop Match</title>
-    <style>
+    <style>, 0.3)';
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function getBottomColorIndex() {
+            let normalizedAngle = (ringAngle % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+            let activeIndex = Math.floor(((2 * Math.PI - normalizedAngle) % (Math.PI * 2)) / (Math.PI / 2));
+            return (activeIndex + 1) % 4;
+        }
+
+        function resetBall() {
+            ballRadius = 0;
+            currentColorIndex = Math.floor(Math.random() * 4);
+        }
+
+        function update() {
+            if (isGameOver) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            ballRadius += speed;
+
+            if (ballRadius >= maxBallRadius) {
+                if (currentColorIndex === getBottomColorIndex()) {
+                    score += 1;
+                    scoreEl.innerText = score;
         body {
             margin: 0;
             background: radial-gradient(circle, #0f2027, #203a43, #2c5364);
@@ -102,113 +127,7 @@
         }
 
         function drawParticles() {
-            for (let i = particles.length - 1; i >= 0; i--) {
-                let p = particles[i];
-                ctx.save();
-                ctx.globalAlpha = p.alpha;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-                ctx.fillStyle = p.color;
-                ctx.fill();
-                ctx.restore();
-
-                p.x += p.vx;
-                p.y += p.vy;
-                p.alpha -= 0.03;
-                if (p.alpha <= 0) particles.splice(i, 1);
-            }
-        }
-
-        function drawRing() {
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const radius = 115;
-            const sliceAngle = (Math.PI * 2) / 4;
-
-            for (let i = 0; i < 4; i++) {
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, radius, ringAngle + i * sliceAngle, ringAngle + (i + 1) * sliceAngle);
-                ctx.lineWidth = 32; // रिंग को बड़ा और मोटा किया गया
-                ctx.strokeStyle = colors[i];
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = colors[i];
-                ctx.stroke();
-            }
-            ctx.shadowBlur = 0;
-        }
-
-        function drawWaterBall() {
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-
-            ctx.save();
-            ctx.beginPath();
-            // बॉल का आकार सिमेट्रिकली छोटा रखा गया है
-            ctx.arc(centerX, centerY, ballRadius * 0.75, 0, Math.PI * 2);
-            ctx.fillStyle = colors[currentColorIndex];
-            ctx.shadowBlur = 12;
-            ctx.shadowColor = colors[currentColorIndex];
-            ctx.fill();
-
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, Math.max(0, (ballRadius * 0.75) - 6), 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-            ctx.fill();
-            ctx.restore();
-        }
-
-        function getBottomColorIndex() {
-            let normalizedAngle = (ringAngle % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
-            let activeIndex = Math.floor(((2 * Math.PI - normalizedAngle) % (Math.PI * 2)) / (Math.PI / 2));
-            return (activeIndex + 1) % 4;
-        }
-
-        function resetBall() {
-            ballRadius = 0;
-            currentColorIndex = Math.floor(Math.random() * 4);
-        }
-
-        function update() {
-            if (isGameOver) return;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            ballRadius += speed;
-
-            if (ballRadius >= maxBallRadius) {
-                if (currentColorIndex === getBottomColorIndex()) {
-                    score += 1;
-                    scoreEl.innerText = score;
-                    
-                    level = Math.floor(score / 5) + 1;
-                    levelEl.innerText = level;
-
-                    if (score > highScore) {
-                        highScore = score;
-                        localStorage.setItem('mm_symm_highscore', highScore);
-                        bestEl.innerText = highScore;
-                    }
-
-                    speed = baseSpeed + (level - 1) * 0.12;
-
-                    createParticles(canvas.width / 2, canvas.height / 2 + 100, colors[currentColorIndex]);
-                    playSound(600, 0.08);
-                    resetBall();
-                } else {
-                    isGameOver = true;
-                    playSound(180, 0.4, 'sawtooth');
-                    msgEl.innerHTML = "<b style='color:#ff0844;'>GAME OVER! Tap to try again</b>";
-                }
-            }
-
-            drawRing();
-            drawWaterBall();
-            drawParticles();
-            requestAnimationFrame(update);
-        }
-
-        function handleTap() {
-            if (isGameOver) {
-                score = 0; level = 1; speed = baseSpeed; isGameOver = false;
+            for (let i = particles.length - 1; i >= 0; i--baseSpeed; isGameOver = false;
                 scoreEl.innerText = score;
                 levelEl.innerText = level;
                 msgEl.innerText = "Tap anywhere to match the water color!";
@@ -224,5 +143,3 @@
         resetBall();
         update();
     </script>
-</body>
-</html>

@@ -1,66 +1,36 @@
 
-<html lang="hi">
-<head>
     <meta charset="UTF-8">
-name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Symmetrical Water Loop Match</title>
-    <style>, 0.3)';
-            ctx.fill();
-            ctx.restore();
-        }
-
-        function getBottomColorIndex() {
-            let normalizedAngle = (ringAngle % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
-            let activeIndex = Math.floor(((2 * Math.PI - normalizedAngle) % (Math.PI * 2)) / (Math.PI / 2));
-            return (activeIndex + 1) % 4;
-        }
-
-        function resetBall() {
-            ballRadius = 0;
-            currentColorIndex = Math.floor(Math.random() * 4);
-        }
-
-        function update() {
-            if (isGameOver) return;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            ballRadius += speed;
-
-            if (ballRadius >= maxBallRadius) {
-                if (currentColorIndex === getBottomColorIndex()) {
-                    score += 1;
-                    scoreEl.innerText = score;
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Full Screen Water Loop Match</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            margin: 0;
-            background: radial-gradient(circle, #0f2027, #203a43, #2c5364);
+            background: radial-gradient(circle at center, #1a2a3a 0%, #0d1b2a 60%, #050a0f 100%);
             color: #fff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', Roboto, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
             height: 100vh;
+            width: 100vw;
             overflow: hidden;
             user-select: none;
+            padding: 20px 10px;
         }
-        #ui-box { text-align: center; margin-bottom: 15px; }
-        .score-text { font-size: 26px; font-weight: bold; text-shadow: 0 0 10px #00f2fe; }
-        .level-text { font-size: 18px; color: #ff0844; margin-top: 4px; font-weight: bold; }
-        #msg { font-size: 15px; color: #e0e0e0; margin-top: 6px; }
+        #ui-box { text-align: center; z-index: 10; }
+        .score-text { font-size: 28px; font-weight: 800; text-shadow: 0 0 12px rgba(0, 242, 254, 0.6); }
+        .level-text { font-size: 18px; color: #ff0844; margin-top: 4px; font-weight: 700; }
+        #msg { font-size: 15px; color: #b0c4de; margin-top: 6px; }
+        #canvas-container { flex-grow: 1; display: flex; align-items: center; justify-content: center; width: 100%; max-height: 70vh; }
         canvas { 
-            background: rgba(0, 0, 0, 0.5); 
+            background: rgba(10, 20, 30, 0.6); 
             border-radius: 50%; 
-            box-shadow: 0 0 35px rgba(0, 242, 254, 0.4); 
+            box-shadow: 0 0 50px rgba(0, 242, 254, 0.25); 
             cursor: pointer;
+            touch-action: manipulation;
         }
-        #creator-tag {
-            margin-top: 18px;
-            font-size: 13px;
-            color: #00f2fe;
-            letter-spacing: 2px;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
+        #creator-tag { font-size: 13px; color: #00f2fe; letter-spacing: 2px; font-weight: 700; text-transform: uppercase; z-index: 10; }
     </style>
 </head>
 <body>
@@ -71,29 +41,43 @@ name="viewport" content="width=device-width, initial-scale=1.0">
         <div id="msg">Tap anywhere to match the water color!</div>
     </div>
     
-    <canvas id="gameCanvas" width="340" height="340"></canvas>
+    <div id="canvas-container">
+        <canvas id="gameCanvas"></canvas>
+    </div>
 
     <div id="creator-tag">Created by Madan Mohan (2026)</div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        const container = document.getElementById('canvas-container');
+        
         const scoreEl = document.getElementById('score');
         const bestEl = document.getElementById('best');
         const levelEl = document.getElementById('level');
         const msgEl = document.getElementById('msg');
+
+        let size = 300;
+        function resizeCanvas() {
+            const maxW = container.clientWidth * 0.9;
+            const maxH = container.clientHeight * 0.9;
+            size = Math.min(maxW, maxH, 480);
+            canvas.width = size;
+            canvas.height = size;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
 
         const colors = ['#00f2fe', '#ff0844', '#ffb199', '#fdbb2d'];
         let ringAngle = 0;
         let currentColorIndex = 0;
         let score = 0;
         let level = 1;
-        let highScore = localStorage.getItem('mm_symm_highscore') || 0;
+        let highScore = localStorage.getItem('mm_full_highscore') || 0;
         bestEl.innerText = highScore;
 
-        let ballRadius = 0;
-        let maxBallRadius = 100; // सिमेट्री मैच पॉइंट
-        let baseSpeed = 1.0;     // धीमी व स्मूथ स्पीड
+        let ballProgress = 0;
+        let baseSpeed = 0.008;
         let speed = baseSpeed;
         let isGameOver = false;
         let particles = [];
@@ -114,12 +98,12 @@ name="viewport" content="width=device-width, initial-scale=1.0">
         }
 
         function createParticles(x, y, color) {
-            for (let i = 0; i < 15; i++) {
+            for (let i = 0; i < 20; i++) {
                 particles.push({
                     x: x, y: y,
-                    vx: (Math.random() - 0.5) * 6,
-                    vy: (Math.random() - 0.5) * 6,
-                    radius: Math.random() * 3 + 2,
+                    vx: (Math.random() - 0.5) * (size * 0.02),
+                    vy: (Math.random() - 0.5) * (size * 0.02),
+                    radius: Math.random() * (size * 0.012) + 2,
                     color: color,
                     alpha: 1
                 });
@@ -127,7 +111,117 @@ name="viewport" content="width=device-width, initial-scale=1.0">
         }
 
         function drawParticles() {
-            for (let i = particles.length - 1; i >= 0; i--baseSpeed; isGameOver = false;
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                ctx.save();
+                ctx.globalAlpha = p.alpha;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fillStyle = p.color;
+                ctx.fill();
+                ctx.restore();
+
+                p.x += p.vx;
+                p.y += p.vy;
+                p.alpha -= 0.03;
+                if (p.alpha <= 0) particles.splice(i, 1);
+            }
+        }
+
+        function drawRing() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = size * 0.36;
+            const sliceAngle = (Math.PI * 2) / 4;
+            const lineWidth = size * 0.1;
+
+            for (let i = 0; i < 4; i++) {
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, ringAngle + i * sliceAngle, ringAngle + (i + 1) * sliceAngle);
+                ctx.lineWidth = lineWidth;
+                ctx.strokeStyle = colors[i];
+                ctx.shadowBlur = size * 0.04;
+                ctx.shadowColor = colors[i];
+                ctx.stroke();
+            }
+            ctx.shadowBlur = 0;
+        }
+
+        function drawWaterBall() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const maxRadius = size * 0.31;
+            const currentRadius = ballProgress * maxRadius;
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, currentRadius, 0, Math.PI * 2);
+            ctx.fillStyle = colors[currentColorIndex];
+            ctx.shadowBlur = size * 0.03;
+            ctx.shadowColor = colors[currentColorIndex];
+            ctx.fill();
+
+            if (currentRadius > 8) {
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, Math.max(0, currentRadius - size * 0.025), 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        function getBottomColorIndex() {
+            let normalizedAngle = (ringAngle % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+            let activeIndex = Math.floor(((2 * Math.PI - normalizedAngle) % (Math.PI * 2)) / (Math.PI / 2));
+            return (activeIndex + 1) % 4;
+        }
+
+        function resetBall() {
+            ballProgress = 0;
+            currentColorIndex = Math.floor(Math.random() * 4);
+        }
+
+        function update() {
+            if (isGameOver) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            ballProgress += speed;
+
+            if (ballProgress >= 1.0) {
+                if (currentColorIndex === getBottomColorIndex()) {
+                    score += 1;
+                    scoreEl.innerText = score;
+                    
+                    level = Math.floor(score / 5) + 1;
+                    levelEl.innerText = level;
+
+                    if (score > highScore) {
+                        highScore = score;
+                        localStorage.setItem('mm_full_highscore', highScore);
+                        bestEl.innerText = highScore;
+                    }
+
+                    speed = baseSpeed + (level - 1) * 0.001;
+
+                    createParticles(canvas.width / 2, canvas.height / 2 + size * 0.3, colors[currentColorIndex]);
+                    playSound(600, 0.08);
+                    resetBall();
+                } else {
+                    isGameOver = true;
+                    playSound(180, 0.4, 'sawtooth');
+                    msgEl.innerHTML = "<b style='color:#ff0844;'>GAME OVER! Tap to try again</b>";
+                }
+            }
+
+            drawRing();
+            drawWaterBall();
+            drawParticles();
+            requestAnimationFrame(update);
+        }
+
+        function handleTap() {
+            if (isGameOver) {
+                score = 0; level = 1; speed = baseSpeed; isGameOver = false;
                 scoreEl.innerText = score;
                 levelEl.innerText = level;
                 msgEl.innerText = "Tap anywhere to match the water color!";
@@ -139,7 +233,9 @@ name="viewport" content="width=device-width, initial-scale=1.0">
             }
         }
 
-        window.addEventListener('click', handleTap);
+        window.addEventListener('pointerdown', handleTap);
         resetBall();
         update();
     </script>
+</body>
+</html>

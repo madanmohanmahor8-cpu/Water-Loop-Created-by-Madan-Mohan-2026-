@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Big Ring Water Loop - Madan Mohan</title>
+    <title>Big Water Loop Match - Madan Mohan</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            background: #09121d;
+            background: #08101a;
             color: #fff;
             font-family: 'Segoe UI', Roboto, sans-serif;
             display: flex;
@@ -18,18 +18,19 @@
             width: 100vw;
             overflow: hidden;
             user-select: none;
-            padding: 20px 10px;
+            padding: 15px 5px;
         }
-        #ui-box { text-align: center; z-index: 10; }
-        .score-text { font-size: 28px; font-weight: 800; color: #00f2fe; text-shadow: 0 0 12px rgba(0, 242, 254, 0.5); }
-        .level-text { font-size: 18px; color: #ff0844; margin-top: 4px; font-weight: 700; }
-        #msg { font-size: 15px; color: #a0b0c0; margin-top: 6px; }
+        #ui-box { text-align: center; z-index: 10; margin-top: 10px; }
+        .score-text { font-size: 28px; font-weight: 800; color: #00f2fe; text-shadow: 0 0 10px rgba(0, 242, 254, 0.4); }
+        .level-text { font-size: 18px; color: #ff0844; margin-top: 2px; font-weight: 700; }
+        #msg { font-size: 14px; color: #a0b0c0; margin-top: 4px; }
         #canvas-container { 
             flex-grow: 1; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
             width: 100%; 
+            height: 100%;
         }
         canvas { 
             background: transparent; 
@@ -37,12 +38,13 @@
             touch-action: manipulation;
         }
         #creator-tag { 
-            font-size: 14px; 
+            font-size: 13px; 
             color: #00f2fe; 
             letter-spacing: 2px; 
             font-weight: 700; 
             text-transform: uppercase; 
             z-index: 10;
+            margin-bottom: 10px;
         }
     </style>
 </head>
@@ -72,10 +74,9 @@
 
         let size = 350;
         function resizeCanvas() {
-            const maxW = container.clientWidth * 0.98;
-            const maxH = container.clientHeight * 0.98;
-            // कैनवास को स्क्रीन के हिसाब से अधिकतम बड़ा (550px तक) किया गया है
-            size = Math.min(maxW, maxH, 550); 
+            const maxW = container.clientWidth * 0.95;
+            const maxH = container.clientHeight * 0.95;
+            size = Math.min(maxW, maxH); // स्क्रीन के हिसाब से मैक्सिमम बड़ा साइज
             canvas.width = size;
             canvas.height = size;
         }
@@ -87,11 +88,11 @@
         let currentColorIndex = 0;
         let score = 0;
         let level = 1;
-        let highScore = localStorage.getItem('mm_bigring_highscore') || 0;
+        let highScore = localStorage.getItem('mm_final_big_highscore') || 0;
         bestEl.innerText = highScore;
 
         let ballProgress = 0;
-        let baseSpeed = 0.0075; // धीमी व आसान स्पीड
+        let baseSpeed = 0.0075; // धीमी व संतुलित स्पीड
         let speed = baseSpeed;
         let isGameOver = false;
         let particles = [];
@@ -145,16 +146,16 @@
         function drawRing() {
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
-            const radius = size * 0.40; // बहुत बड़ा गोल घेरा
+            const radius = size * 0.41; // बड़ा गोल घेरा
             const sliceAngle = (Math.PI * 2) / 4;
-            const lineWidth = size * 0.12; // काफी मोटी और मजबूत दिखने वाली रिंग
+            const lineWidth = size * 0.12; // मोटी रिंग
 
             for (let i = 0; i < 4; i++) {
                 ctx.beginPath();
                 ctx.arc(centerX, centerY, radius, ringAngle + i * sliceAngle, ringAngle + (i + 1) * sliceAngle);
                 ctx.lineWidth = lineWidth;
                 ctx.strokeStyle = colors[i];
-                ctx.shadowBlur = size * 0.04;
+                ctx.shadowBlur = size * 0.03;
                 ctx.shadowColor = colors[i];
                 ctx.stroke();
             }
@@ -164,8 +165,7 @@
         function drawWaterBall() {
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
-            // बॉल को छोटा रखा गया है (रिंग के मुकाबले 0.28 अनुपात)
-            const maxRadius = size * 0.28; 
+            const maxRadius = size * 0.28; // छोटी व सिमेट्रिकल बॉल
             const currentRadius = ballProgress * maxRadius;
 
             ctx.save();
@@ -212,7 +212,7 @@
 
                     if (score > highScore) {
                         highScore = score;
-                        localStorage.setItem('mm_bigring_highscore', highScore);
+                        localStorage.setItem('mm_final_big_highscore', highScore);
                         bestEl.innerText = highScore;
                     }
 
@@ -254,5 +254,3 @@
     </script>
 </body>
 </html>
-
-                    

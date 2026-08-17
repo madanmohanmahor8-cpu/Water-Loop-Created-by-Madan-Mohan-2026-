@@ -1,39 +1,60 @@
-<!DOCTYPE html>
+
+                    <!DOCTYPE html>
 <html lang="hi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Big Water Loop Match - Madan Mohan</title>
+    <title>Water Loop Match - Ultimate Edition</title>
+    <!-- CrazyGames SDK v2 -->
+    <script src="https://sdk.crazygames.com/crazygames-sdk-v2.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            background: #08101a;
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #09121d;
             color: #fff;
             font-family: 'Segoe UI', Roboto, sans-serif;
+            user-select: none;
+        }
+        body {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
-            height: 100vh;
-            width: 100vw;
-            overflow: hidden;
-            user-select: none;
             padding: 15px 5px;
+            position: relative;
         }
-        #ui-box { text-align: center; z-index: 10; margin-top: 10px; }
-        .score-text { font-size: 28px; font-weight: 800; color: #00f2fe; text-shadow: 0 0 10px rgba(0, 242, 254, 0.4); }
-        .level-text { font-size: 18px; color: #ff0844; margin-top: 2px; font-weight: 700; }
+        #ui-box { text-align: center; z-index: 10; margin-top: 5px; }
+        .score-text { font-size: 26px; font-weight: 800; color: #00f2fe; text-shadow: 0 0 10px rgba(0, 242, 254, 0.4); }
+        .level-text { font-size: 16px; color: #ff0844; margin-top: 2px; font-weight: 700; }
         #msg { font-size: 14px; color: #a0b0c0; margin-top: 4px; }
+        
+        #sound-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            font-size: 18px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            z-index: 20;
+        }
+
         #canvas-container { 
-            flex-grow: 1; 
+            flex: 1;
+            width: 100%;
             display: flex; 
             align-items: center; 
             justify-content: center; 
-            width: 100%; 
-            height: 100%;
         }
         canvas { 
-            background: transparent; 
+            display: block;
+            background: transparent !important; 
             cursor: pointer;
             touch-action: manipulation;
         }
@@ -44,11 +65,13 @@
             font-weight: 700; 
             text-transform: uppercase; 
             z-index: 10;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
     </style>
 </head>
 <body>
+
+    <button id="sound-btn">🔊</button>
 
     <div id="ui-box">
         <div class="score-text">Score: <span id="score">0</span> | Best: <span id="best">0</span></div>
@@ -63,6 +86,16 @@
     <div id="creator-tag">Created by Madan Mohan (2026)</div>
 
     <script>
+        // --- SOUND SYSTEM ---
+        let isMuted = false;
+        const soundBtn = document.getElementById('sound-btn');
+        soundBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            isMuted = !isMuted;
+            soundBtn.innerText = isMuted ? '🔇' : '🔊';
+        });
+
+        // --- CANVAS SETUP ---
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const container = document.getElementById('canvas-container');
@@ -72,33 +105,36 @@
         const levelEl = document.getElementById('level');
         const msgEl = document.getElementById('msg');
 
-        let size = 350;
+        let size = 300;
         function resizeCanvas() {
-            const maxW = container.clientWidth * 0.95;
-            const maxH = container.clientHeight * 0.95;
-            size = Math.min(maxW, maxH); // स्क्रीन के हिसाब से मैक्सिमम बड़ा साइज
+            const w = container.clientWidth;
+            const h = container.clientHeight;
+            size = Math.min(w * 0.92, h * 0.92); 
             canvas.width = size;
             canvas.height = size;
         }
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
 
+        // --- GAME VARIABLES ---
         const colors = ['#00f2fe', '#ff0844', '#ffb199', '#fdbb2d'];
         let ringAngle = 0;
         let currentColorIndex = 0;
         let score = 0;
         let level = 1;
-        let highScore = localStorage.getItem('mm_final_big_highscore') || 0;
+        let highScore = localStorage.getItem('mm_perfect_v26_highscore') || 0;
         bestEl.innerText = highScore;
 
         let ballProgress = 0;
-        let baseSpeed = 0.0075; // धीमी व संतुलित स्पीड
+        let baseSpeed = 0.0075;
         let speed = baseSpeed;
         let isGameOver = false;
         let particles = [];
 
+        // --- AUDIO SYNTHESIZER ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(freq, duration, type = 'sine') {
+            if (isMuted) return;
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
@@ -112,6 +148,7 @@
             osc.stop(audioCtx.currentTime + duration);
         }
 
+        // --- VISUAL EFFECTS ---
         function createParticles(x, y, color) {
             for (let i = 0; i < 20; i++) {
                 particles.push({
@@ -143,12 +180,13 @@
             }
         }
 
+        // --- RENDER FUNCTIONS ---
         function drawRing() {
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
-            const radius = size * 0.41; // बड़ा गोल घेरा
+            const radius = size * 0.40;
             const sliceAngle = (Math.PI * 2) / 4;
-            const lineWidth = size * 0.12; // मोटी रिंग
+            const lineWidth = size * 0.12;
 
             for (let i = 0; i < 4; i++) {
                 ctx.beginPath();
@@ -165,7 +203,7 @@
         function drawWaterBall() {
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
-            const maxRadius = size * 0.28; // छोटी व सिमेट्रिकल बॉल
+            const maxRadius = size * 0.27;
             const currentRadius = ballProgress * maxRadius;
 
             ctx.save();
@@ -196,6 +234,7 @@
             currentColorIndex = Math.floor(Math.random() * 4);
         }
 
+        // --- GAME LOOP ---
         function update() {
             if (isGameOver) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -212,7 +251,7 @@
 
                     if (score > highScore) {
                         highScore = score;
-                        localStorage.setItem('mm_final_big_highscore', highScore);
+                        localStorage.setItem('mm_perfect_v26_highscore', highScore);
                         bestEl.innerText = highScore;
                     }
 
@@ -225,6 +264,11 @@
                     isGameOver = true;
                     playSound(180, 0.4, 'sawtooth');
                     msgEl.innerHTML = "<b style='color:#ff0844;'>GAME OVER! Tap to try again</b>";
+                    
+                    // CrazyGames Gameplay Stop API
+                    if (window.CrazyGames && window.CrazyGames.SDK) {
+                        window.CrazyGames.SDK.game.gameplayStop();
+                    }
                 }
             }
 
@@ -234,14 +278,37 @@
             requestAnimationFrame(update);
         }
 
-        function handleTap() {
+        function restartGame() {
+            score = 0; level = 1; speed = baseSpeed; isGameOver = false;
+            scoreEl.innerText = score;
+            levelEl.innerText = level;
+            msgEl.innerText = "Tap anywhere to match the water color!";
+            
+            // CrazyGames Gameplay Start API
+            if (window.CrazyGames && window.CrazyGames.SDK) {
+                window.CrazyGames.SDK.game.gameplayStart();
+            }
+            
+            resetBall();
+            update();
+        }
+
+        // --- INPUT HANDLER WITH AD SYSTEM ---
+        function handleTap(e) {
+            if (e.target.id === 'sound-btn') return;
+
             if (isGameOver) {
-                score = 0; level = 1; speed = baseSpeed; isGameOver = false;
-                scoreEl.innerText = score;
-                levelEl.innerText = level;
-                msgEl.innerText = "Tap anywhere to match the water color!";
-                resetBall();
-                update();
+                // Safety Ad Trigger (Doesn't crash if SDK fails)
+                if (window.CrazyGames && window.CrazyGames.SDK) {
+                    const callbacks = {
+                        adFinished: () => restartGame(),
+                        adError: (error) => restartGame(),
+                        adStarted: () => { if (audioCtx) audioCtx.suspend(); }
+                    };
+                    window.CrazyGames.SDK.ad.requestAd("midgame", callbacks);
+                } else {
+                    restartGame();
+                }
             } else {
                 ringAngle += Math.PI / 2;
                 playSound(420, 0.04);

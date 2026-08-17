@@ -1,39 +1,41 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <html lang="hi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Big Water Loop Match - Madan Mohan</title>
+    <title>Full Screen Water Loop</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            background: #08101a;
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #09121d;
             color: #fff;
             font-family: 'Segoe UI', Roboto, sans-serif;
+            user-select: none;
+        }
+        body {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
-            height: 100vh;
-            width: 100vw;
-            overflow: hidden;
-            user-select: none;
             padding: 15px 5px;
         }
-        #ui-box { text-align: center; z-index: 10; margin-top: 10px; }
-        .score-text { font-size: 28px; font-weight: 800; color: #00f2fe; text-shadow: 0 0 10px rgba(0, 242, 254, 0.4); }
-        .level-text { font-size: 18px; color: #ff0844; margin-top: 2px; font-weight: 700; }
+        #ui-box { text-align: center; z-index: 10; margin-top: 5px; }
+        .score-text { font-size: 26px; font-weight: 800; color: #00f2fe; text-shadow: 0 0 10px rgba(0, 242, 254, 0.4); }
+        .level-text { font-size: 16px; color: #ff0844; margin-top: 2px; font-weight: 700; }
         #msg { font-size: 14px; color: #a0b0c0; margin-top: 4px; }
         #canvas-container { 
-            flex-grow: 1; 
+            flex: 1;
+            width: 100%;
             display: flex; 
             align-items: center; 
             justify-content: center; 
-            width: 100%; 
-            height: 100%;
         }
         canvas { 
-            background: transparent; 
+            display: block;
+            background: transparent !important; 
             cursor: pointer;
             touch-action: manipulation;
         }
@@ -44,7 +46,7 @@
             font-weight: 700; 
             text-transform: uppercase; 
             z-index: 10;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
     </style>
 </head>
@@ -72,11 +74,12 @@
         const levelEl = document.getElementById('level');
         const msgEl = document.getElementById('msg');
 
-        let size = 350;
+        let size = 300;
         function resizeCanvas() {
-            const maxW = container.clientWidth * 0.95;
-            const maxH = container.clientHeight * 0.95;
-            size = Math.min(maxW, maxH); // स्क्रीन के हिसाब से मैक्सिमम बड़ा साइज
+            const w = container.clientWidth;
+            const h = container.clientHeight;
+            // मोबाइल स्क्रीन की 92% चौड़ाई/ऊंचाई तक स्वतः फ़िट होगा
+            size = Math.min(w * 0.92, h * 0.92); 
             canvas.width = size;
             canvas.height = size;
         }
@@ -88,11 +91,11 @@
         let currentColorIndex = 0;
         let score = 0;
         let level = 1;
-        let highScore = localStorage.getItem('mm_final_big_highscore') || 0;
+        let highScore = localStorage.getItem('mm_final_v3_highscore') || 0;
         bestEl.innerText = highScore;
 
         let ballProgress = 0;
-        let baseSpeed = 0.0075; // धीमी व संतुलित स्पीड
+        let baseSpeed = 0.0075;
         let speed = baseSpeed;
         let isGameOver = false;
         let particles = [];
@@ -146,9 +149,9 @@
         function drawRing() {
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
-            const radius = size * 0.41; // बड़ा गोल घेरा
+            const radius = size * 0.40;
             const sliceAngle = (Math.PI * 2) / 4;
-            const lineWidth = size * 0.12; // मोटी रिंग
+            const lineWidth = size * 0.12;
 
             for (let i = 0; i < 4; i++) {
                 ctx.beginPath();
@@ -165,7 +168,7 @@
         function drawWaterBall() {
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
-            const maxRadius = size * 0.28; // छोटी व सिमेट्रिकल बॉल
+            const maxRadius = size * 0.27;
             const currentRadius = ballProgress * maxRadius;
 
             ctx.save();
@@ -212,7 +215,7 @@
 
                     if (score > highScore) {
                         highScore = score;
-                        localStorage.setItem('mm_final_big_highscore', highScore);
+                        localStorage.setItem('mm_final_v3_highscore', highScore);
                         bestEl.innerText = highScore;
                     }
 

@@ -1,240 +1,402 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Water Loop Match - Deluxe Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Rune Master - Ancient Ruins</title>
     <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
         body {
-            margin: 0;
-            background: radial-gradient(circle, #0f2027, #203a43, #2c5364);
-            color: #fff;
+            background-color: #0b0d12;
+            color: #e2d7a7;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
-            height: 100vh;
+            align-items: center;
+            min-height: 100vh;
             overflow: hidden;
-            user-select: none;
         }
-        #ui-box { text-align: center; margin-bottom: 15px; }
-        .score-text { font-size: 26px; font-weight: bold; text-shadow: 0 0 10px #00f2fe; }
-        .level-text { font-size: 18px; color: #ff0844; margin-top: 4px; font-weight: bold; }
-        #msg { font-size: 15px; color: #e0e0e0; margin-top: 6px; }
-        canvas { 
-            background: rgba(0, 0, 0, 0.5); 
-            border-radius: 50%; 
-            box-shadow: 0 0 35px rgba(0, 242, 254, 0.4); 
+        .game-container {
+            width: 100%;
+            max-width: 420px;
+            height: 100vh;
+            max-height: 840px;
+            background: radial-gradient(circle at center, #1a1e29 0%, #0a0c10 100%);
+            border: 2px solid #b89742;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 12px;
+            position: relative;
+            box-shadow: 0 0 20px rgba(184, 151, 66, 0.2);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0,0,0,0.4);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(184, 151, 66, 0.3);
+        }
+        .stat-box { text-align: center; }
+        .stat-label { font-size: 10px; color: #8a7b52; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-value { font-size: 18px; font-weight: bold; color: #ffd700; }
+        
+        .grid-container {
+            display: grid;
+      grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid #4a3b1a;
+            margin: auto 0;
+        }
+        .tile {
+            aspect-ratio: 1;
+            background: #141721;
+            border: 2px dashed #3a3221;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #fff;
+        }
+        .tile.active { border-style: solid; box-shadow: 0 0 10px currentColor; }
+        
+        .palette {
+            display: flex;
+            justify-content: space-between;
+            gap: 6px;
+            background: rgba(0,0,0,0.4);
+            padding: 8px;
+            border-radius: 8px;
+        }
+        .color-btn {
+            flex: 1;
+            height: 48px;
+            border-radius: 8px;
+            border: 2px solid transparent;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
             cursor: pointer;
         }
-        #creator-tag {
-            margin-top: 18px;
-            font-size: 13px;
-            color: #00f2fe;
-            letter-spacing: 2px;
+        .color-btn.selected { border-color: #ffffff; transform: scale(1.05); }
+        
+        .c-red { <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Rune Master - Ancient Ruins</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body {
+            background-color: #0b0d12;
+            color: #e2d7a7;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        .game-container {
+            width: 100%;
+            max-width: 420px;
+            height: 100vh;
+            max-height: 840px;
+            background: radial-gradient(circle at center, #1a1e29 0%, #0a0c10 100%);
+            border: 2px solid #b89742;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 12px;
+            position: relative;
+            box-shadow: 0 0 20px rgba(184, 151, 66, 0.2);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0,0,0,0.4);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(184, 151, 66, 0.3);
+        }
+        .stat-box { text-align: center; }
+        .stat-label { font-size: 10px; color: #8a7b52; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-value { font-size: 18px; font-weight: bold; color: #ffd700; }
+        
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid #4a3b1a;
+            margin: auto 0;
+        }
+        .tile {
+            aspect-ratio: 1;
+            background: #141721;
+            border: 2px dashed #3a3221;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
             font-weight: bold;
-            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #fff;
+        }
+        .tile.active { border-style: solid; box-shadow: 0 0 10px currentColor; }
+        
+        .palette {
+            display: flex;
+            justify-content: space-between;
+            gap: 6px;
+            background: rgba(0,0,0,0.4);
+            padding: 8px;
+            border-radius: 8px;
+        }
+        .color-btn {
+            flex: 1;
+            height: 48px;
+            border-radius: 8px;
+            border: 2px solid transparent;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+        }
+        .color-btn.selected { border-color: #ffffff; transform: scale(1.05); }
+        
+        .c-red { background: #e63946; }
+        .c-blue { background: #00b4d8; }
+        .c-green { background: #2a9d8f; }
+        .c-yellow { background: #e9c46a; color: #2b2d42; }
+        .c-purple { background: #9d4edd; }
+
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #ffd700;
+            padding-top: 4px;
+            font-weight: 500;
+        }
+        
+        /* Modal Overlay */
+        .modal {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(11, 13, 18, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            z-content: 10;
+            border-radius: 10px;
+        }
+        .modal-title { font-size: 24px; color: #ffd700; margin-bottom: 8px; text-align: center; }
+        .modal-subtitle { font-size: 13px; color: #a09575; margin-bottom: 24px; text-align: center; }
+        .mode-btn {
+            width: 100%;
+            background: #1e2330;
+            border: 1px solid #b89742;
+            padding: 14px;
+            border-radius: 8px;
+            color: #e2d7a7;
+            margin-bottom: 12px;
+            cursor: pointer;
+            text-align: left;
+        }
+        .mode-btn h3 { color: #ffd700; font-size: 15px; margin-bottom: 4px; }
+        .mode-btn p { font-size: 11px; color: #9aa0a6; }
+        .btn-action {
+            background: #b89742;
+            color: #0b0d12;
+            border: none;
+            padding: 10px 20px;
+            font-weight: bold;
+            border-radius: 6px;
+            margin-top: 10px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-    <div id="ui-box">
-        <div class="score-text">Score: <span id="score">0</span> | Best: <span id="best">0</span></div>
-        <div class="level-text">Level: <span id="level">1</span></div>
-        <div id="msg">Tap anywhere to match the water color!</div>
+<div class="game-container">
+    <div class="header">
+        <div class="stat-box"><div class="stat-label">Score</div><div class="stat-value" id="score">0</div></div>
+        <div class="stat-box"><div class="stat-label">Height Level</div><div class="stat-value" id="level">1 / 15</div></div>
+        <div class="stat-box"><div class="stat-label">Timer</div><div class="stat-value" id="timer">60s</div></div>
     </div>
-    
-    <canvas id="gameCanvas" width="340" height="340"></canvas>
 
-    <div id="creator-tag">Created by Madan Mohan (2026)</div>
+    <div class="grid-container" id="grid"></div>
 
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const scoreEl = document.getElementById('score');
-        const bestEl = document.getElementById('best');
-        const levelEl = document.getElementById('level');
-        const msgEl = document.getElementById('msg');
+    <div class="palette">
+        <div class="color-btn c-red selected" data-color="red" onclick="selectColor('red')">ᚱ</div>
+        <div class="color-btn c-blue" data-color="blue" onclick="selectColor('blue')">ᚲ</div>
+        <div class="color-btn c-green" data-color="green" onclick="selectColor('green')">ᚦ</div>
+        <div class="color-btn c-yellow" data-color="yellow" onclick="selectColor('yellow')">ᚠ</div>
+        <div class="color-btn c-purple" data-color="purple" onclick="selectColor('purple')">ᚢ</div>
+    </div>
 
-        const colors = ['#00f2fe', '#ff0844', '#ffb199', '#fdbb2d'];
-        let ringAngle = 0;
-        let currentColorIndex = 0;
-        let score = 0;
-        let level = 1;
-        let highScore = localStorage.getItem('mm_deluxe_highscore') || 0;
-        bestEl.innerText = highScore;
+    <div class="footer">Created by Madan Mohan 2026</div>
 
-        let ballRadius = 0;
-        let baseSpeed = 1.2; // स्लो स्पीड सेट की गई है
-        let speed = baseSpeed;
-        let isGameOver = false;
-        let particles = [];
-        let hasStar = false;
+    <!-- Start Modal -->
+    <div class="modal" id="startModal">
+        <div class="modal-title">Rune Master</div>
+        <div class="modal-subtitle">Choose how you want to restore the ancient temple.</div>
+        <div class="mode-btn" onclick="startGame('memory')">
+            <h3>🧠 Memory Challenge Mode</h3>
+            <p>Memorize the complete rune pattern for 3 seconds, then rebuild it before time runs out.</p>
+        </div>
+        <div class="mode-btn" onclick="startGame('free')">
+            <h3>🏛️ Free Build Mode</h3>
+            <p>Place and recolor any rune freely. No hidden colors and no instant failures.</p>
+        </div>
+        <div class="footer" style="margin-top:20px;">Created by Madan Mohan 2026</div>
+    </div>
+</div>
 
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playSound(freq, duration, type = 'sine') {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + duration);
+<script>
+    const colors = {
+        red: { hex: '#e63946', rune: 'ᚱ' },
+        blue: { hex: '#00b4d8', rune: 'ᚲ' },
+        green: { hex: '#2a9d8f', rune: 'ᚦ' },
+        yellow: { hex: '#e9c46a', rune: 'ᚠ' },
+        purple: { hex: '#9d4edd', rune: 'ᚢ' }
+    };
+    let selectedColor = 'red';
+    let gameMode = 'free';
+    let score = 0;
+    let level = 1;
+    let targetPattern = [];
+
+    // Web Audio API Sound Effects
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSound(freq, type = 'sine', duration = 0.1) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+        osc.stop(audioCtx.currentTime + duration);
+    }
+
+    function createGrid() {
+        const grid = document.getElementById('grid');
+        grid.innerHTML = '';
+        for (let i = 0; i < 16; i++) {
+            const tile = document.createElement('div');
+            tile.className = 'tile';
+            tile.onclick = () => fillTile(tile, i);
+            grid.appendChild(tile);
         }
+    }
 
-        function createParticles(x, y, color) {
-            for (let i = 0; i < 15; i++) {
-                particles.push({
-                    x: x, y: y,
-                    vx: (Math.random() - 0.5) * 6,
-                    vy: (Math.random() - 0.5) * 6,
-                    radius: Math.random() * 4 + 2,
-                    color: color,
-                    alpha: 1
-                });
-            }
-        }
+    function selectColor(color) {
+        selectedColor = color;
+        document.querySelectorAll('.color-btn').forEach(btn => btn.classList.remove('selected'));
+        document.querySelector(`.c-${color}`).classList.add('selected');
+        playSound(400, 'sine', 0.05);
+    }
 
-        function drawParticles() {
-            for (let i = particles.length - 1; i >= 0; i--) {
-                let p = particles[i];
-                ctx.save();
-                ctx.globalAlpha = p.alpha;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-                ctx.fillStyle = p.color;
-                ctx.fill();
-                ctx.restore();
+    function fillTile(tile, index) {
+        tile.style.backgroundColor = colors[selectedColor].hex;
+        tile.style.color = selectedColor === 'yellow' ? '#2b2d42' : '#ffffff';
+        tile.innerText = colors[selectedColor].rune;
+        tile.classList.add('active');
+        playSound(600, 'triangle', 0.1);
+        
+        score += 50;
+        document.getElementById('score').innerText = score;
+    }
 
-                p.x += p.vx;
-                p.y += p.vy;
-                p.alpha -= 0.03;
-                if (p.alpha <= 0) particles.splice(i, 1);
-            }
-        }
-
-        function drawRing() {
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const radius = 110;
-            const sliceAngle = (Math.PI * 2) / 4;
-
-            for (let i = 0; i < 4; i++) {
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, radius, ringAngle + i * sliceAngle, ringAngle + (i + 1) * sliceAngle);
-                ctx.lineWidth = 22;
-                ctx.strokeStyle = colors[i];
-                ctx.shadowBlur = 12;
-                ctx.shadowColor = colors[i];
-                ctx.stroke();
-            }
-            ctx.shadowBlur = 0;
-        }
-
-        function drawWaterBall() {
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, ballRadius, 0, Math.PI * 2);
-            ctx.fillStyle = colors[currentColorIndex];
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = colors[currentColorIndex];
-            ctx.fill();
-
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, Math.max(0, ballRadius - 8), 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-            ctx.fill();
-
-            if (hasStar && ballRadius > 15) {
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, 8, 0, Math.PI * 2);
-                ctx.fillStyle = '#fff';
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = '#fff';
-                ctx.fill();
-            }
-
-            ctx.restore();
-        }
-
-        function getBottomColorIndex() {
-            let normalizedAngle = (ringAngle % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
-            let activeIndex = Math.floor(((2 * Math.PI - normalizedAngle) % (Math.PI * 2)) / (Math.PI / 2));
-            return (activeIndex + 1) % 4;
-        }
-
-        function resetBall() {
-            ballRadius = 0;
-            currentColorIndex = Math.floor(Math.random() * 4);
-            hasStar = Math.random() < 0.3; // 30% चांस है कि बोनस स्टार आए
-        }
-
-        function update() {
-            if (isGameOver) return;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            ballRadius += speed;
-
-            if (ballRadius >= 98) {
-                if (currentColorIndex === getBottomColorIndex()) {
-                    let earned = hasStar ? 2 : 1;
-                    score += earned;
-                    scoreEl.innerText = score;
-                    
-                    level = Math.floor(score / 5) + 1;
-                    levelEl.innerText = level;
-
-                    if (score > highScore) {
-                        highScore = score;
-                        localStorage.setItem('mm_deluxe_highscore', highScore);
-                        bestEl.innerText = highScore;
-                    }
-
-                    // धीरे-धीरे स्पीड बढ़ाना
-                    speed = baseSpeed + (level - 1) * 0.15;
-
-                    createParticles(canvas.width / 2, canvas.height / 2 + 100, colors[currentColorIndex]);
-                    playSound(hasStar ? 800 : 550, 0.08);
-                    resetBall();
-                } else {
-                    isGameOver = true;
-                    playSound(180, 0.4, 'sawtooth');
-                    msgEl.innerHTML = "<b style='color:#ff0844;'>GAME OVER! Tap to try again</b>";
-                }
-            }
-
-            drawRing();
-            drawWaterBall();
-            drawParticles();
-            requestAnimationFrame(update);
-        }
-
-        function handleTap() {
-            if (isGameOver) {
-                score = 0; level = 1; speed = baseSpeed; isGameOver = false;
-                scoreEl.innerText = score;
-                levelEl.innerText = level;
-                msgEl.innerText = "Tap anywhere to match the water color!";
-                resetBall();
-                update();
-            } else {
-                ringAngle += Math.PI / 2;
-                playSound(420, 0.04);
-            }
-        }
-
-        window.addEventListener('click', handleTap);
-        resetBall();
-        update();
-    </script>
+    function startGame(mode) {
+        gameMode = mode;
+        document.getElementById('startModal').style.display = 'none';
+        createGrid();
+        playSound(800, 'sine', 0.2);
+    }
+</script>
 </body>
-</html>
+</html>￼Enterbackground: #e63946; }
+        .c-blue { background: #00b4d8; }
+        .c-green { background: #2a9d8f; }
+        .c-yellow { background: #e9c46a; color: #2b2d42; }
+        .c-purple { background: #9d4edd; }
+
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #ffd700;
+            padding-top: 4px;
+            font-weight: 500;
+        }
+        
+        /* Modal Overlay */
+        .modal {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(11, 13, 18, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            z-content: 10;
+            border-radius: 10px;
+        }
+        .modal-title { font-size: 24px; color: #ffd700; margin-bottom: 8px; text-align: center; }
+        .modal-subtitle { font-size: 13px; color: #a09575; margin-bottom: 24px; text-align: center; }
+        .mode-btn {
+            width: 100%;
+            background: #1e2330;
+            border: 1px solid #b89742;
+            padding: 14px;
+            border-radius: 8px;
+            color: #e2d7a7;
+            margin-bottom: 12px;
+            cursor: pointer;
+            text-align: left;
+        }
+        .mode-btn h3 { color: #ffd700; font-size: 15px; margin-bottom: 4px; }
+        .mode-btn p { font-size: 11px; color: #9aa0a6; }
+        .btn-action {
+            background: #b89742;
+            color: #0b0d12;
+            border: none;
+            padding: 10px 20px;
+            font-weight: bold;
+            border-radius: 6px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>

@@ -1,0 +1,253 @@
+here<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Rune Master - Ancient Ruins</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body {
+            background-color: #0b0d12;
+            color: #e2d7a7;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        .game-container {
+            width: 100%;
+            max-width: 420px;
+            height: 100vh;
+            max-height: 840px;
+            background: radial-gradient(circle at center, #1a1e29 0%, #0a0c10 100%);
+            border: 2px solid #b89742;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 12px;
+            position: relative;
+            box-shadow: 0 0 20px rgba(184, 151, 66, 0.2);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0,0,0,0.4);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(184, 151, 66, 0.3);
+        }
+        .stat-box { text-align: center; }
+        .stat-label { font-size: 10px; color: #8a7b52; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-value { font-size: 18px; font-weight: bold; color: #ffd700; }
+        
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid #4a3b1a;
+            margin: auto 0;
+        }
+        .tile {
+            aspect-ratio: 1;
+            background: #141721;
+            border: 2px dashed #3a3221;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #fff;
+        }
+        .tile.active { border-style: solid; box-shadow: 0 0 10px currentColor; }
+        
+        .palette {
+            display: flex;
+            justify-content: space-between;
+            gap: 6px;
+            background: rgba(0,0,0,0.4);
+            padding: 8px;
+            border-radius: 8px;
+        }
+        .color-btn {
+            flex: 1;
+            height: 48px;
+            border-radius: 8px;
+            border: 2px solid transparent;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+        }
+        .color-btn.selected { border-color: #ffffff; transform: scale(1.05); }
+        
+        .c-red { background: #e63946; }
+        .c-blue { background: #00b4d8; }
+        .c-green { background: #2a9d8f; }
+        .c-yellow { background: #e9c46a; color: #2b2d42; }
+        .c-purple { background: #9d4edd; }
+
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #ffd700;
+            padding-top: 4px;
+            font-weight: 500;
+        }
+        
+        /* Modal Overlay */
+        .modal {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(11, 13, 18, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            z-content: 10;
+            border-radius: 10px;
+        }
+        .modal-title { font-size: 24px; color: #ffd700; margin-bottom: 8px; text-align: center; }
+        .modal-subtitle { font-size: 13px; color: #a09575; margin-bottom: 24px; text-align: center; }
+        .mode-btn {
+            width: 100%;
+            background: #1e2330;
+            border: 1px solid #b89742;
+            padding: 14px;
+            border-radius: 8px;
+            color: #e2d7a7;
+            margin-bottom: 12px;
+            cursor: pointer;
+            text-align: left;
+        }
+        .mode-btn h3 { color: #ffd700; font-size: 15px; margin-bottom: 4px; }
+        .mode-btn p { font-size: 11px; color: #9aa0a6; }
+        .btn-action {
+            background: #b89742;
+            color: #0b0d12;
+            border: none;
+            padding: 10px 20px;
+            font-weight: bold;
+            border-radius: 6px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <div class="header">
+        <div class="stat-box"><div class="stat-label">Score</div><div class="stat-value" id="score">0</div></div>
+        <div class="stat-box"><div class="stat-label">Height Level</div><div class="stat-value" id="level">1 / 15</div></div>
+        <div class="stat-box"><div class="stat-label">Timer</div><div class="stat-value" id="timer">60s</div></div>
+    </div>
+
+    <div class="grid-container" id="grid"></div>
+
+    <div class="palette">
+        <div class="color-btn c-red selected" data-color="red" onclick="selectColor('red')">ᚱ</div>
+        <div class="color-btn c-blue" data-color="blue" onclick="selectColor('blue')">ᚲ</div>
+        <div class="color-btn c-green" data-color="green" onclick="selectColor('green')">ᚦ</div>
+        <div class="color-btn c-yellow" data-color="yellow" onclick="selectColor('yellow')">ᚠ</div>
+        <div class="color-btn c-purple" data-color="purple" onclick="selectColor('purple')">ᚢ</div>
+    </div>
+
+    <div class="footer">Created by Madan Mohan 2026</div>
+
+    <!-- Start Modal -->
+    <div class="modal" id="startModal">
+        <div class="modal-title">Rune Master</div>
+        <div class="modal-subtitle">Choose how you want to restore the ancient temple.</div>
+        <div class="mode-btn" onclick="startGame('memory')">
+            <h3>🧠 Memory Challenge Mode</h3>
+            <p>Memorize the complete rune pattern for 3 seconds, then rebuild it before time runs out.</p>
+        </div>
+        <div class="mode-btn" onclick="startGame('free')">
+            <h3>🏛️ Free Build Mode</h3>
+            <p>Place and recolor any rune freely. No hidden colors and no instant failures.</p>
+        </div>
+        <div class="footer" style="margin-top:20px;">Created by Madan Mohan 2026</div>
+    </div>
+</div>
+
+<script>
+    const colors = {
+        red: { hex: '#e63946', rune: 'ᚱ' },
+        blue: { hex: '#00b4d8', rune: 'ᚲ' },
+        green: { hex: '#2a9d8f', rune: 'ᚦ' },
+        yellow: { hex: '#e9c46a', rune: 'ᚠ' },
+        purple: { hex: '#9d4edd', rune: 'ᚢ' }
+    };
+    let selectedColor = 'red';
+    let gameMode = 'free';
+    let score = 0;
+    let level = 1;
+    let targetPattern = [];
+
+    // Web Audio API Sound Effects
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSound(freq, type = 'sine', duration = 0.1) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+        osc.stop(audioCtx.currentTime + duration);
+    }
+
+    function createGrid() {
+        const grid = document.getElementById('grid');
+        grid.innerHTML = '';
+        for (let i = 0; i < 16; i++) {
+            const tile = document.createElement('div');
+            tile.className = 'tile';
+            tile.onclick = () => fillTile(tile, i);
+            grid.appendChild(tile);
+        }
+    }
+
+    function selectColor(color) {
+        selectedColor = color;
+        document.querySelectorAll('.color-btn').forEach(btn => btn.classList.remove('selected'));
+        document.querySelector(`.c-${color}`).classList.add('selected');
+        playSound(400, 'sine', 0.05);
+    }
+
+    function fillTile(tile, index) {
+        tile.style.backgroundColor = colors[selectedColor].hex;
+        tile.style.color = selectedColor === 'yellow' ? '#2b2d42' : '#ffffff';
+        tile.innerText = colors[selectedColor].rune;
+        tile.classList.add('active');
+        playSound(600, 'triangle', 0.1);
+        
+        score += 50;
+        document.getElementById('score').innerText = score;
+    }
+
+    function startGame(mode) {
+        gameMode = mode;
+        document.getElementById('startModal').style.display = 'none';
+        createGrid();
+        playSound(800, 'sine', 0.2);
+    }
+</script>
+</body>
+</html>
